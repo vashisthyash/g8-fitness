@@ -11,13 +11,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for API testing
+                .csrf(csrf -> csrf.disable()) // Critical for the "Save" button to work
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index.html", "/login.html", "/dashboard.html", "/static/**", "/api/**").permitAll()
+                        .requestMatchers("/", "/index.html", "/dashboard.html", "/script.js", "/api/**").permitAll()
                         .anyRequest().authenticated()
-                )
-                .headers(headers -> headers.frameOptions(frame -> frame.disable())); // Helps with some browser blocks
-
+                );
         return http.build();
     }
 }

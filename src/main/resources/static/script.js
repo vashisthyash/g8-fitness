@@ -1,16 +1,22 @@
-// This tells the browser: "Look for the API on whatever website I am currently on"
-const API_URL = window.location.origin + "/api/members";
+const API_URL = "/api/members";
 
+// Load members when page opens
 document.addEventListener("DOMContentLoaded", fetchMembers);
 
 function fetchMembers() {
     fetch(API_URL)
-        .then(res => res.json())
-        .then(data => renderTable(data));
+        .then(res => {
+            if (!res.ok) throw new Error("Network response was not ok");
+            return res.json();
+        })
+        .then(data => renderTable(data))
+        .catch(err => console.error("Error fetching data:", err));
 }
 
 function renderTable(data) {
     const tableBody = document.getElementById("memberTableBody");
+    if (!tableBody) return;
+
     tableBody.innerHTML = data.map(member => {
         let pillClass = member.status === 'PRESENT' ? 'bg-present' : (member.status === 'ABSENT' ? 'bg-absent' : 'bg-pending');
 
@@ -18,7 +24,7 @@ function renderTable(data) {
         <tr class="border-secondary">
             <td>
                 <div class="fw-bold">${member.name}</div>
-                <div class="small text-secondary">${member.phone} | ${member.email}</div>
+                <div class="small text-secondary">${member.phone || 'No Phone'} | ${member.email}</div>
             </td>
             <td>${member.city || 'N/A'}</td>
             <td><span class="status-pill ${pillClass}">${member.status}</span></td>
@@ -33,7 +39,10 @@ function renderTable(data) {
     }).join('');
 }
 
+// CORRECTED ADD MEMBER FUNCTION
 function addMember() {
+    console.log("Attempting to save member...");
+
     const memberData = {
         name: document.getElementById('mName').value,
         email: document.getElementById('mEmail').value,
@@ -47,21 +56,37 @@ function addMember() {
         status: "PENDING"
     };
 
+    console.log("Sending Data:", memberData);
+
     fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(memberData)
-    }).then(() => {
-        location.reload();
-    });
+    })
+        .then(res => {
+            if(res.ok) {
+                alert("Member Successfully Saved to Database!");
+                location.reload();
+            } else {
+                alert("Database Error: Check your SQL connection or Java Logs.");
+            }
+        })
+        .catch(err => {
+            console.error("System Error:", err);
+            alert("System Error: Could not reach the server.");
+        });
 }
 
 function updateStatus(id, status) {
-    fetch(`${API_URL}/${id}/status?status=${status}`, { method: "PUT" }).then(() => fetchMembers());
+    fetch(`${API_URL}/${id}/status?status=${status}`, { method: "PUT" })
+        .then(() => fetchMembers())
+        .catch(err => console.error("Update Error:", err));
 }
 
 function deleteMember(id) {
-    if(confirm("Delete this member?")) {
-        fetch(`${API_URL}/${id}`, { method: "DELETE" }).then(() => fetchMembers());
+    if(confirm("Are you sure you want to delete this member?")) {
+        fetch(`${API_URL}/${id}`, { method: "DELETE" })
+            .then(() => fetchMembers())
+            .catch(err => console.error("Delete Error:", err));
     }
 }
