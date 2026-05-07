@@ -19,6 +19,7 @@ public class MemberController {
 
     @PostMapping
     public Member addMember(@RequestBody Member member) {
+        // This takes the data from your "Save Profile" button and puts it in SQL
         return memberRepository.save(member);
     }
 
