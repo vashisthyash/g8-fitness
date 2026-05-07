@@ -1,11 +1,11 @@
-# Use Java 17
-FROM eclipse-temurin:17-jdk-jammy as build
+# Step 1: Build the app
+FROM maven:3.8.4-openjdk-17 AS build
 COPY . .
-# Build the application
-RUN ./mvnw clean package -DskipTests
+# This is the "Build Command" but inside Docker
+RUN mvn clean package -DskipTests
 
-# Run the application
-FROM eclipse-temurin:17-jre-jammy
+# Step 2: Run the app
+FROM openjdk:17-jdk-slim
 COPY --from=build /target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","/app.jar"]
